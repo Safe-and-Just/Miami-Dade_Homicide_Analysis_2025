@@ -1,15 +1,20 @@
+###############################################
+#######Code written by A.D.S.##################
+#######Bend, OR, USA, May 2025#################
+###############################################
+
 rm(list = ls())
 graphics.off()
-setwd("/Users/anne_devan_song/Documents/Data/Miami_Data/")
 library(tidyverse)
 library(ggpubr)
 library(readr)
 library(dplyr)
 library(viridis)
 
-
+#load homicide by zipcode data
 df<- read.csv("Miami_Dade_Homicide_Zipcode_2020_to_2024.csv")
 
+#rename columns
 colnames(df) <- c("Zipcode", "2020",
                   "2021", "2022", 
                   "2023", "2024")
@@ -26,7 +31,7 @@ df_long <- df %>%
 total_by_year <- df_long %>%
   group_by(year) %>%
   summarise(value = sum(value), .groups = "drop") %>%
-  mutate(zipcode = "TOTAL")  # This will be our "total" line
+  mutate(zipcode = "TOTAL")  #"total" line
 
 total_by_year <- total_by_year[, c("zipcode", 
                                    "year",
@@ -40,6 +45,8 @@ df_long$Zipcode <- as.character(df_long$Zipcode)
 
 df_combined <- bind_rows(df_long, total_by_year)
 
+
+#Plot county and zipcode homcide counts
 p1 <-ggplot(df_combined, aes(x = year, y = value, group = Zipcode)) +
   # Plot lines: if TOTAL, make it black; else, use color by ZIP
   geom_line(data = subset(df_combined, Zipcode == "TOTAL"),
@@ -48,14 +55,16 @@ p1 <-ggplot(df_combined, aes(x = year, y = value, group = Zipcode)) +
             aes(color = factor(Zipcode)), size = 1) +
   scale_color_viridis_d() +
   labs(
-    title = "Homicide counts in M-D County and zipcodes",
+    title = "Homicide counts in M-D by county and by zipcodes",
     x = "Year",
-    y = "Value"
+    y = ""
   ) +
   theme_classic() +
   theme(legend.position = "none")
 
 ####
+##Circle of Brotherhood's primary zipcode##
+
 highlight_zips <- c("33147", "33142")
 
 label_df <- df_long %>%
@@ -65,7 +74,8 @@ label_df <- df_long %>%
   slice(1) %>%
   ungroup()
 
-# Plot
+# Plot zipcode-level homicide counts and highlight COB primary zipcodes
+
 p2<- ggplot(df_long, aes(x = year, y = value, group = Zipcode)) +
   # All ZIP lines
   geom_line(aes(color = factor(Zipcode)), size = 0.3) +
@@ -84,12 +94,13 @@ p2<- ggplot(df_long, aes(x = year, y = value, group = Zipcode)) +
   labs(
     title = "Homicide Counts by Zipcode",
     x = "Year",
-    y = "Value"
+    y = ""
   ) +
   theme_classic() +
   theme(legend.position = "none")
 #####
 
+#Write the figure as a .png image 
 png("Homicide_Miami_Dade.png", width = 5, height = 8, units="in", res = 400)
 ggarrange(p1, p2, ncol=1)
 dev.off()
@@ -100,8 +111,7 @@ sum(df$`2022`) #[1] 154
 sum(df$`2021`) #[1] 183
 sum(df$`2020`) #[1] 221
 
-
-#Calculate percentage decreases 
+#Use the formula below to arrive at percentage decreases based on count data
 100*(1 - (5/31)) #change between 2020 to 2024 in zipcode 33147 ## 83.87% 
 100*(1 - (8/20)) #change between 2020 to 2024 in zipcode 33142 ## 60 7%
 100*(1 - (5/18)) #change between 2023 to 2024 in zipcode 33147 ## 72.27%
